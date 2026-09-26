@@ -1,13 +1,16 @@
 ﻿using ClientEngagementFlow.Api.Contracts;
 using ClientEngagementFlow.Application.Abstractions.Persistence;
 using ClientEngagementFlow.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
 
 namespace ClientEngagementFlow.Api.Controllers
 {
     [ApiController]
     [Route("api/jobs")]
-    public sealed class ProcessingJobsController : ControllerBase
+    [Authorize]
+    public class ProcessingJobsController : ControllerBase
     {
         private readonly IProcessingJobStore _store;
 
@@ -35,6 +38,7 @@ namespace ClientEngagementFlow.Api.Controllers
             return Ok(ConvertToDto(job));
         }
 
+        [RequiredScope("jobs.submit")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateProcessingJobRequest request, CancellationToken cancellationToken)
         {
@@ -51,6 +55,30 @@ namespace ClientEngagementFlow.Api.Controllers
 
             // Return 202 since jobs are still processing
             return AcceptedAtAction(nameof(GetById), new { id = job.Id }, response);
+        }
+
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            return Ok(new
+            {
+                Name = User.Identity?.Name,
+                Claims = User.Claims.Select(c => new
+                {
+                    c.Type,
+                    c.Value
+                })
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("health")]
+        public IActionResult Health()
+        {
+            return Ok(new
+            {
+                Status = "Healthy"
+            });
         }
 
         private static ProcessingJobResponse ConvertToDto(ProcessingJob job)

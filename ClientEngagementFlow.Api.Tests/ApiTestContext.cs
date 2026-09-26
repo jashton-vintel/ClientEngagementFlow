@@ -1,10 +1,12 @@
-﻿using ClientEngagementFlow.Infastructure.Persistence;
+﻿using ClientEngagementFlow.Api.Tests.Authentication;
+using ClientEngagementFlow.Infastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace ClientEngagementFlow.Api.Tests
 {
@@ -27,7 +29,7 @@ namespace ClientEngagementFlow.Api.Tests
                     {
                         builder.ConfigureServices(services =>
                         {
-                            // Removes all instances of SQL since we use that in the api and just use sqlite for testing
+                            // Overrides to remove all instances of SQL since we use that in the api and just use sqlite for testing
                             services.RemoveAll<ApplicationDbContext>();
 
                             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
@@ -39,6 +41,14 @@ namespace ClientEngagementFlow.Api.Tests
                                 {
                                     options.UseSqlite(_connection);
                                 });
+
+                            // Override the authentication to use our test auth handler 
+                            services.AddAuthentication(options =>
+                            {
+                                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                            })
+                            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
                         });
                     });
 

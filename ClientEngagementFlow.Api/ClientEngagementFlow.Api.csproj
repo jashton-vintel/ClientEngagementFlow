@@ -12,12 +12,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Web" Version="4.15.0" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.17.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ClientEngagementFlow.Application\ClientEngagementFlow.Application.csproj" />
-    <ProjectReference Include="..\ClientEngagementFlow.Infastructure\ClientEngagementFlow.Infastructure.csproj" />
+    <ProjectReference Include="..\ClientEngagementFlow.Infastructure\ClientEngagementFlow.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -160,5 +160,63 @@ namespace ClientEngagementFlow.Api.Tests
 
             Assert.Empty(jobs);
         }
+
+        [Fact]
+        public async Task Get_jobs_without_authentication_returns_401()
+        {
+            await using var api = new ApiTestContext();
+
+            api.Client.DefaultRequestHeaders.Add("X-Test-Anonymous", "true");
+
+            var response = await api.Client.GetAsync("/api/jobs");
+
+            Assert.Equal(HttpStatusCode.Unauthorized,response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Post_job_without_authentication_returns_401()
+        {
+            await using var api = new ApiTestContext();
+
+            api.Client.DefaultRequestHeaders.Add("X-Test-Anonymous", "true");
+
+            var response = await api.Client.PostAsJsonAsync("/api/jobs",
+                    new CreateProcessingJobRequest
+                    {
+                        DocumentId = Guid.NewGuid()
+                    }, 
+                    JsonOptions);
+
+            Assert.Equal(HttpStatusCode.Unauthorized,response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Post_job_without_required_scope_returns_403()
+        {
+            await using var api = new ApiTestContext();
+
+            api.Client.DefaultRequestHeaders.Add("X-Test-Scopes", "none");
+
+            var response = await api.Client.PostAsJsonAsync("/api/jobs",
+                    new CreateProcessingJobRequest
+                    {
+                        DocumentId = Guid.NewGuid()
+                    }, 
+                    JsonOptions);
+
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Health_endpoint_allows_anonymous_access()
+        {
+            await using var api = new ApiTestContext();
+
+            api.Client.DefaultRequestHeaders.Add("X-Test-Anonymous","true");
+
+            var response = await api.Client.GetAsync("/api/jobs/health");
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
     }
 }
