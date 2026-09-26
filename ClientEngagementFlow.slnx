@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="ClientEngagementFlow.Api/ClientEngagementFlow.Api.csproj" Id="ff49b216-c041-4805-b051-975faf433c27" />
+    <Project Path="ClientEngagementFlow.Domain/ClientEngagementFlow.Domain.csproj" Id="0d27baaa-87c5-444b-bc03-94ad1d0b413a" />
+    <Project Path="ClientEngagementFlow.Infastructure/ClientEngagementFlow.Infastructure.csproj" Id="bfc130c8-f75b-4a68-b2c8-92269aa0e306" />
+    <Project Path="ClientEngagementFlow.Web/ClientEngagementFlow.Web.esproj">
+      <Build />
+      <Deploy />
+    </Project>
+    <Project Path="ClientEngagementFlow.Worker/ClientEngagementFlow.Worker.csproj" Id="0b601844-dfc5-45ae-ad79-5731eabf16a8" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="ClientEngagementFlow.Api.Tests/ClientEngagementFlow.Api.Tests.csproj" Id="7ed7f39c-0232-4c32-a9e1-26a13c0141e3" />
+    <Project Path="ClientEngagementFlow.Domain.Tests/ClientEngagementFlow.Domain.Tests.csproj" Id="cb2eeb02-62f8-473a-be0f-4c8606711ebd" />
+  </Folder>
+</Solution>
