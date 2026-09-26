@@ -1,7 +1,7 @@
 ﻿using ClientEngagementFlow.Api.Contracts;
+using ClientEngagementFlow.Application.Abstractions.Persistence;
 using ClientEngagementFlow.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using static ClientEngagementFlow.Api.Services.IProcessJobsStore;
 
 namespace ClientEngagementFlow.Api.Controllers
 {

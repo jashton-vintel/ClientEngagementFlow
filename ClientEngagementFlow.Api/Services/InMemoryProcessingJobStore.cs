@@ -1,6 +1,6 @@
-﻿using ClientEngagementFlow.Domain.Entities;
+﻿using ClientEngagementFlow.Application.Abstractions.Persistence;
+using ClientEngagementFlow.Domain.Entities;
 using System.Collections.Concurrent;
-using static ClientEngagementFlow.Api.Services.IProcessJobsStore;
 
 namespace ClientEngagementFlow.Api.Services
 {
@@ -17,7 +17,7 @@ namespace ClientEngagementFlow.Api.Services
 
         public Task<ProcessingJob?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            _jobs.TryGetValue(id, out ProcessingJob job);
+            _jobs.TryGetValue(id, out var job);
 
             return Task.FromResult(job);
         }

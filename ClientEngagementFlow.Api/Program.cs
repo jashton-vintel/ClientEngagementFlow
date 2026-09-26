@@ -1,11 +1,8 @@
-using ClientEngagementFlow.Api.Services;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
-using static ClientEngagementFlow.Api.Services.IProcessJobsStore;
+using ClientEngagementFlow.Infastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services
     .AddControllers()
@@ -15,10 +12,9 @@ builder.Services
             new JsonStringEnumConverter());
     });
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddSingleton<IProcessingJobStore, InMemoryProcessingJobStore>();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

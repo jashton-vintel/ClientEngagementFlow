@@ -131,7 +131,7 @@ namespace ClientEngagementFlow.Api.Tests
 
             Assert.NotNull(jobs);
 
-            Assert.True(jobs.Count >= 2);
+            Assert.True(jobs.Count == 2);
         }
 
         [Fact]
@@ -147,6 +147,18 @@ namespace ClientEngagementFlow.Api.Tests
             var response = await api.Client.PostAsJsonAsync("/api/jobs", request);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Get_all_jobs_returns_empty_collection_when_no_jobs_exist()
+        {
+            await using var api = new ApiTestContext();
+
+            var jobs = await api.Client.GetFromJsonAsync<List<ProcessingJobResponse>>("/api/jobs", JsonOptions);
+
+            Assert.NotNull(jobs);
+
+            Assert.Empty(jobs);
         }
     }
 }
