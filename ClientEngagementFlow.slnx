@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="ClientEngagementFlow.Api/ClientEngagementFlow.Api.csproj" Id="ff49b216-c041-4805-b051-975faf433c27" />
     <Project Path="ClientEngagementFlow.Domain/ClientEngagementFlow.Domain.csproj" Id="0d27baaa-87c5-444b-bc03-94ad1d0b413a" />
