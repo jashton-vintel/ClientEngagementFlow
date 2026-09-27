@@ -42,36 +42,52 @@ namespace ClientEngagementFlow.Worker
 
         private async Task ProcessMessageAsync(ProcessMessageEventArgs args)
         {
-            var message = JsonSerializer.Deserialize<ProcessingJobMessage>(args.Message.Body);
 
-            if (message is null)
+            try
             {
-                await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body could not be deserialized.");
 
-                return;
+                _logger.LogInformation("Received message {MessageId}. DeliveryCount: {DeliveryCount}", args.Message.MessageId, args.Message.DeliveryCount);
+
+                var message = JsonSerializer.Deserialize<ProcessingJobMessage>(args.Message.Body);
+
+                if (message is null)
+                {
+                    await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body could not be deserialized.");
+
+                    return;
+                }
+
+                // safely get a fresh scoped DbContext per message instead of keeping one alive for the whole worker lifetime
+                using var scope = _scopeFactory.CreateScope();
+
+                var store = scope.ServiceProvider.GetRequiredService<IProcessingJobStore>();
+
+                var job = await store.GetByIdAsync(message.JobId, args.CancellationToken);
+
+                if (job is null)
+                {
+                    await args.DeadLetterMessageAsync(args.Message, "JobNotFound", $"Processing job {message.JobId} was not found.");
+
+                    return;
+                }
+
+                job.StartProcessing();
+
+                throw new InvalidOperationException("Test processing failure");
+
+                job.StartValidation();
+                job.Complete();
+
+                await store.UpdateAsync(job, args.CancellationToken);
+
+                await args.CompleteMessageAsync(args.Message, args.CancellationToken);
             }
-
-            // safely get a fresh scoped DbContext per message instead of keeping one alive for the whole worker lifetime
-            using var scope = _scopeFactory.CreateScope();
-
-            var store = scope.ServiceProvider.GetRequiredService<IProcessingJobStore>();
-
-            var job = await store.GetByIdAsync(message.JobId, args.CancellationToken);
-
-            if (job is null)
+            catch (Exception ex)
             {
-                await args.DeadLetterMessageAsync(args.Message, "JobNotFound", $"Processing job {message.JobId} was not found.");
+                _logger.LogError(ex, "Processing failed for message {MessageId}. DeliveryCount: {DeliveryCount}", args.Message.MessageId, args.Message.DeliveryCount);
 
-                return;
+                throw;
             }
-
-            job.StartProcessing();
-            job.StartValidation();
-            job.Complete();
-
-            await store.UpdateAsync(job, args.CancellationToken);
-
-            await args.CompleteMessageAsync(args.Message, args.CancellationToken);
         }
 
         private Task ProcessErrorAsync(ProcessErrorEventArgs args)
