@@ -1,37 +1,91 @@
-<h1>Processing Jobs</h1>
+<div class="page">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">CLIENT ENGAGEMENT FLOW</p>
+      <h1>Processing Jobs</h1>
+      <p class="subtitle">
+        Submit and monitor asynchronous document processing jobs in real time.
+      </p>
+    </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Job ID</th>
-      <th>Document ID</th>
-      <th>Status</th>
-      <th>Created</th>
-    </tr>
-  </thead>
+    <button class="button button-secondary" (click)="login()">
+      Sign in
+    </button>
+  </header>
 
-  <tbody>
-    @for (job of jobs(); track job.id) {
-    <tr>
-      <td>{{ job.id }}</td>
-      <td>{{ job.documentId }}</td>
-      <td>{{ job.status }}</td>
-      <td>{{ job.createdUtc }}</td>
-    </tr>
-    }
-  </tbody>
-</table>
+  <main>
+    <section class="card submit-card">
+      <div class="submit-copy">
+        <h2>Submit a document</h2>
+        <p>Create a new processing job using an existing document ID.</p>
+      </div>
 
-<button (click)="login()">Sign in</button>
+      <div class="submit-form">
+        <input type="text"
+               placeholder="Enter document ID"
+               [value]="documentId()"
+               (input)="documentId.set($any($event.target).value)" />
 
+        <button class="button button-primary" (click)="submitJob()">
+          Submit job
+        </button>
+      </div>
+    </section>
 
-<div>
-  <input type="text"
-         placeholder="Document ID"
-         [value]="documentId()"
-         (input)="documentId.set($any($event.target).value)" />
+    <section class="card jobs-card">
+      <div class="section-header">
+        <div>
+          <h2>Jobs</h2>
+          <p>Live processing status from the ClientEngagementFlow worker.</p>
+        </div>
 
-  <button (click)="submitJob()">
-    Submit job
-  </button>
+        <div class="job-count">
+          {{ jobs().length }} jobs
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Job ID</th>
+              <th>Document ID</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (job of jobs(); track job.id) {
+            <tr>
+              <td class="mono">
+                {{ job.id }}
+              </td>
+
+              <td class="mono">
+                {{ job.documentId }}
+              </td>
+
+              <td>
+                <span class="status"
+                      [class.status-queued]="job.status === 'Queued'"
+                      [class.status-processing]="job.status === 'Processing'"
+                      [class.status-validating]="job.status === 'Validating'"
+                      [class.status-completed]="job.status === 'Completed'"
+                      [class.status-failed]="job.status === 'Failed'">
+                  <span class="status-dot"></span>
+                  {{ job.status }}
+                </span>
+              </td>
+
+              <td class="created">
+                {{ job.createdUtc }}
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 </div>

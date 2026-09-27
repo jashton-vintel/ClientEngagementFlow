@@ -24,7 +24,6 @@ import {
 
 import { App } from './app/app';
 
-
 const apiScope = 'api://33043fba-9677-43cc-bd5b-c0173f5a1fef/jobs.submit';
 
 
