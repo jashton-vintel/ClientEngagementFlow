@@ -79,7 +79,7 @@ namespace ClientEngagementFlow.Worker
                 return;
             }
 
-            // Simple guard to stop potential duplication if sql save failes for now..
+            // Simple idempotency guard for duplicate service bus delivery
             if (job.Status == ProcessingStatus.Completed)
             {
                 _logger.LogInformation("Job {JobId} is already completed. Completing duplicate message.", job.Id);
@@ -92,34 +92,39 @@ namespace ClientEngagementFlow.Worker
             {
                 job.StartProcessing();
                 job.StartValidation();
-
                 job.Complete();
 
                 await store.UpdateAsync(job, args.CancellationToken);
-
-                await args.CompleteMessageAsync(args.Message, args.CancellationToken);
-
-                await NotifyStatusChangedAsync(job.Id, job.Status.ToString(), args.CancellationToken);
-
-                _logger.LogInformation("Completed processing job {JobId}", job.Id);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Processing failed for job {JobId}. DeliveryCount: {DeliveryCount}", job.Id, args.Message.DeliveryCount);
 
-                // If we exceed the max delivery count mark the job as failed, save it and then move to DLQ
+                // Only mark Failed on the final delivery attempt
                 if (args.Message.DeliveryCount >= _serviceBusOptions.MaxDeliveryCount)
                 {
                     job.Fail(ex.Message);
 
                     await store.UpdateAsync(job, args.CancellationToken);
                     await args.DeadLetterMessageAsync(args.Message, "ProcessingFailed", ex.Message, args.CancellationToken);
-
                     return;
                 }
 
                 throw;
             }
+
+            try
+            {
+                await NotifyStatusChangedAsync(job.Id, job.Status.ToString(), args.CancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Job {JobId} completed successfully, but the real-time notification failed.", job.Id);
+            }
+
+            await args.CompleteMessageAsync(args.Message, args.CancellationToken);
+
+            _logger.LogInformation("Completed processing job {JobId}", job.Id);
         }
 
         private Task ProcessErrorAsync(ProcessErrorEventArgs args)
