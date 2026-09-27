@@ -1,5 +1,5 @@
 using ClientEngagementFlow.Api.Hubs;
-using ClientEngagementFlow.Infastructure;
+using ClientEngagementFlow.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Scalar.AspNetCore;

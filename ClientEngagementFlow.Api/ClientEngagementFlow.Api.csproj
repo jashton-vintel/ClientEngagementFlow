@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ClientEngagementFlow.Application\ClientEngagementFlow.Application.csproj" />
-    <ProjectReference Include="..\ClientEngagementFlow.Infastructure\ClientEngagementFlow.Infrastructure.csproj" />
+    <ProjectReference Include="..\ClientEngagementFlow.Infrastructure\ClientEngagementFlow.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

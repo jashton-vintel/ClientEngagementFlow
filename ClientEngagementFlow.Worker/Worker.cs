@@ -61,14 +61,14 @@ namespace ClientEngagementFlow.Worker
             {
                 _logger.LogWarning(ex, "Invalid message {MessageId}", args.Message.MessageId);
 
-                await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body is not valid JSON.");
+                await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body is not valid JSON.", args.CancellationToken);
 
                 return;
             }
 
             if (message is null)
             {
-                await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body could not be deserialized.");
+                await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body could not be deserialized.", args.CancellationToken);
                 return;
             }
 
@@ -78,7 +78,7 @@ namespace ClientEngagementFlow.Worker
 
             if (job is null)
             {
-                await args.DeadLetterMessageAsync(args.Message, "JobNotFound", $"Processing job {message.JobId} was not found.");
+                await args.DeadLetterMessageAsync(args.Message, "JobNotFound", $"Processing job {message.JobId} was not found.", args.CancellationToken);
                 return;
             }
 

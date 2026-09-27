@@ -2,7 +2,7 @@
 using ClientEngagementFlow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ClientEngagementFlow.Infastructure.Persistence
+namespace ClientEngagementFlow.Infrastructure.Persistence
 {
     public sealed class EfProcessingJobStore : IProcessingJobStore
     {

@@ -1,4 +1,4 @@
-using ClientEngagementFlow.Infastructure;
+using ClientEngagementFlow.Infrastructure;
 using ClientEngagementFlow.Worker;
 
 var builder = Host.CreateApplicationBuilder(args);

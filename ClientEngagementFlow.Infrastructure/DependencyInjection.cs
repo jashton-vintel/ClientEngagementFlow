@@ -1,13 +1,13 @@
 ﻿using Azure.Messaging.ServiceBus;
 using ClientEngagementFlow.Application.Abstractions.Messaging;
 using ClientEngagementFlow.Application.Abstractions.Persistence;
-using ClientEngagementFlow.Infastructure.Persistence;
+using ClientEngagementFlow.Infrastructure.Persistence;
 using ClientEngagementFlow.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ClientEngagementFlow.Infastructure
+namespace ClientEngagementFlow.Infrastructure
 {
     public static class DependencyInjection
     {

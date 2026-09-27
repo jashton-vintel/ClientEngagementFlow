@@ -1,5 +1,5 @@
 ﻿using ClientEngagementFlow.Api.Tests.Authentication;
-using ClientEngagementFlow.Infastructure.Persistence;
+using ClientEngagementFlow.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;

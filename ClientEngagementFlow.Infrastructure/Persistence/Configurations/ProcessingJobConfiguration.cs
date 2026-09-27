@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ClientEngagementFlow.Infastructure.Persistence.Configurations
+namespace ClientEngagementFlow.Infrastructure.Persistence.Configurations
 {
     public class ProcessingJobConfiguration : IEntityTypeConfiguration<ProcessingJob>
     {

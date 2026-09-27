@@ -1,6 +1,6 @@
 @ClientEngagementFlow.Api_HostAddress = http://localhost:5174
 
-GET {{ClientEngagementFlow.Api_HostAddress}}/weatherforecast/
+GET {{ClientEngagementFlow.Api_HostAddress}}/api/jobs/health
 Accept: application/json
 
 ###

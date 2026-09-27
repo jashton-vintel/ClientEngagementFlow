@@ -7,7 +7,7 @@
     <Project Path="ClientEngagementFlow.Application/ClientEngagementFlow.Application.csproj" Id="09fbfb2f-c633-4b34-9649-82190bcb0f21" />
     <Project Path="ClientEngagementFlow.AuthTest/ClientEngagementFlow.AuthTest.csproj" Id="09ca9738-8372-4f14-916c-1816de05f689" />
     <Project Path="ClientEngagementFlow.Domain/ClientEngagementFlow.Domain.csproj" Id="0d27baaa-87c5-444b-bc03-94ad1d0b413a" />
-    <Project Path="ClientEngagementFlow.Infastructure/ClientEngagementFlow.Infrastructure.csproj" Id="bfc130c8-f75b-4a68-b2c8-92269aa0e306" />
+    <Project Path="ClientEngagementFlow.Infrastructure/ClientEngagementFlow.Infrastructure.csproj" Id="bfc130c8-f75b-4a68-b2c8-92269aa0e306" />
     <Project Path="ClientEngagementFlow.Web/ClientEngagementFlow.Web.esproj">
       <Build Solution="Release|*" />
       <Deploy />
