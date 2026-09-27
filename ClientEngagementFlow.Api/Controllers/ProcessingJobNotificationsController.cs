@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace ClientEngagementFlow.Api.Controllers
 {
     // Internal endpoint called by the Worker. Uses simple dev service-to-service auth via a shared key
-    // in the X-Internal-Api-Key header rather than a user JWT. To be replaced by Managed Identity / Entra app-to-app auth.
+    // in the X-Internal-Api-Key header rather than a user JWT. To be replaced by Managed Identity / Entra app-to-app auth
     [ApiController]
     [AllowAnonymous]
     [Route("api/job-notifications")]

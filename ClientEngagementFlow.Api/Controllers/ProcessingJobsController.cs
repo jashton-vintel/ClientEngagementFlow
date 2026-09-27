@@ -55,8 +55,6 @@ namespace ClientEngagementFlow.Api.Controllers
             // store to db
             await _store.AddAsync(job, cancellationToken);
 
-            // how to handle failure here?
-
             // publish job
             await _publisher.PublishAsync(job.Id, job.DocumentId,cancellationToken);
 
