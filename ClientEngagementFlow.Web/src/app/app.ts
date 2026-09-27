@@ -1,6 +1,8 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { ProcessingJob } from './models/processing-job';
 import { ProcessingJobsService } from './services/processing-jobs.service';
+
+import { ProcessingJobsHubService } from './services/processing-jobs-hub.service';
 import { MsalService } from '@azure/msal-angular';
 
 @Component({
@@ -15,6 +17,7 @@ export class App implements OnInit {
 
   constructor(
     private readonly processingJobsService: ProcessingJobsService,
+    private readonly processingJobsHubService: ProcessingJobsHubService,
     private readonly msalService: MsalService
   ) {
   }
@@ -38,6 +41,15 @@ export class App implements OnInit {
 
             if (this.msalService.instance.getActiveAccount()) {
               this.loadJobs();
+              this.processingJobsHubService.startConnection((jobId, status) => {
+                this.jobs.update(jobs =>
+                  jobs.map(job =>
+                    job.id === jobId
+                      ? { ...job, status }
+                      : job
+                  )
+                );
+              });
             }
           },
           error: error => {

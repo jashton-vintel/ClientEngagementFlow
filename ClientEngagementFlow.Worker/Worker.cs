@@ -4,6 +4,7 @@ using ClientEngagementFlow.Application.Abstractions.Persistence;
 using ClientEngagementFlow.Domain.Enums;
 using ClientEngagementFlow.Infrastructure.Messaging;
 using Microsoft.Extensions.Options;
+using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace ClientEngagementFlow.Worker
@@ -14,15 +15,17 @@ namespace ClientEngagementFlow.Worker
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<Worker> _logger;
         private readonly ServiceBusOptions _serviceBusOptions;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         private ServiceBusProcessor? _processor;
 
-        public Worker(ServiceBusClient serviceBusClient, IServiceScopeFactory scopeFactory, ILogger<Worker> logger, IOptions<ServiceBusOptions> options)
+        public Worker(ServiceBusClient serviceBusClient, IServiceScopeFactory scopeFactory, ILogger<Worker> logger, IOptions<ServiceBusOptions> options, IHttpClientFactory httpClientFactory)
         {
             _serviceBusClient = serviceBusClient;
             _scopeFactory = scopeFactory;
             _logger = logger;
             _serviceBusOptions = options.Value;
+            _httpClientFactory = httpClientFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken ct)
@@ -96,6 +99,8 @@ namespace ClientEngagementFlow.Worker
 
                 await args.CompleteMessageAsync(args.Message, args.CancellationToken);
 
+                await NotifyStatusChangedAsync(job.Id, job.Status.ToString(), args.CancellationToken);
+
                 _logger.LogInformation("Completed processing job {JobId}", job.Id);
             }
             catch (Exception ex)
@@ -133,6 +138,22 @@ namespace ClientEngagementFlow.Worker
             }
 
             await base.StopAsync(cancellationToken);
+        }
+
+        private async Task NotifyStatusChangedAsync(Guid jobId, string status, CancellationToken cancellationToken)
+        {
+            var client = _httpClientFactory.CreateClient();
+
+            var response = await client.PostAsJsonAsync(
+                "https://localhost:7221/api/job-notifications",
+                new
+                {
+                    JobId = jobId,
+                    Status = status
+                },
+                cancellationToken);
+
+            response.EnsureSuccessStatusCode();
         }
     }
 }

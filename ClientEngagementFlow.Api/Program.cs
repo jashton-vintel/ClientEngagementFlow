@@ -1,8 +1,9 @@
-using Scalar.AspNetCore;
-using System.Text.Json.Serialization;
+using ClientEngagementFlow.Api.Hubs;
 using ClientEngagementFlow.Infastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
+using Scalar.AspNetCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,9 +33,12 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins("http://127.0.0.1:49860", "http://localhost:49860")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
+
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -54,6 +58,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ProcessingJobsHub>("/hubs/processing-jobs");
 
 app.Run();
 
