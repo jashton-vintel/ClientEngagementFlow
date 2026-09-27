@@ -17,9 +17,11 @@
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "@azure/msal-angular": "^6.2.1",
+    "@azure/msal-browser": "^5.23.0",
+    "jest-editor-support": "*",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "jest-editor-support": "*"
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@angular/build": "^21.2.24",
