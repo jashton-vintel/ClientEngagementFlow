@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { MsalService } from '@azure/msal-angular';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +20,7 @@ export class ProcessingJobsHubService {
 
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(
-        'https://localhost:7221/hubs/processing-jobs',
+        environment.signalRHubUrl,
         {
           accessTokenFactory: async () => {
             const account = this.msalService.instance.getActiveAccount();
@@ -31,9 +32,7 @@ export class ProcessingJobsHubService {
             const tokenResult =
               await this.msalService.instance.acquireTokenSilent({
                 account,
-                scopes: [
-                  'api://33043fba-9677-43cc-bd5b-c0173f5a1fef/jobs.submit'
-                ]
+                scopes: [environment.apiScope]
               });
 
             return tokenResult.accessToken;
@@ -45,12 +44,6 @@ export class ProcessingJobsHubService {
     this.hubConnection.on(
       'JobStatusChanged',
       (jobId: string, status: string) => {
-        console.log(
-          'SignalR job update:',
-          jobId,
-          status
-        );
-
         onJobStatusChanged(jobId, status);
       }
     );

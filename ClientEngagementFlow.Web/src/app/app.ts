@@ -1,19 +1,23 @@
 import { Component, OnInit, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ProcessingJob } from './models/processing-job';
 import { ProcessingJobsService } from './services/processing-jobs.service';
 
 import { ProcessingJobsHubService } from './services/processing-jobs-hub.service';
 import { MsalService } from '@azure/msal-angular';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
   standalone: true,
+  imports: [DatePipe],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App implements OnInit {
   jobs = signal<ProcessingJob[]>([]);
   documentId = signal('');
+  isSignedIn = signal(false);
 
   constructor(
     private readonly processingJobsService: ProcessingJobsService,
@@ -40,6 +44,7 @@ export class App implements OnInit {
             }
 
             if (this.msalService.instance.getActiveAccount()) {
+              this.isSignedIn.set(true);
               this.loadJobs();
               this.processingJobsHubService.startConnection((jobId, status) => {
                 this.jobs.update(jobs =>
@@ -65,9 +70,6 @@ export class App implements OnInit {
   private loadJobs(): void {
     this.processingJobsService.getJobs().subscribe({
       next: jobs => {
-        console.log('Jobs returned from API:', jobs);
-        console.log('Job count:', jobs.length);
-
         this.jobs.set(jobs);
       },
       error: error => {
@@ -85,8 +87,6 @@ export class App implements OnInit {
 
     this.processingJobsService.createJob(documentId).subscribe({
       next: job => {
-        console.log('Created job:', job);
-
         this.jobs.update(jobs => [job, ...jobs]);
         this.documentId.set('');
       },
@@ -98,9 +98,7 @@ export class App implements OnInit {
 
   login(): void {
     this.msalService.loginRedirect({
-      scopes: [
-        'api://33043fba-9677-43cc-bd5b-c0173f5a1fef/jobs.submit'
-      ]
+      scopes: [environment.apiScope]
     });
   }
 }

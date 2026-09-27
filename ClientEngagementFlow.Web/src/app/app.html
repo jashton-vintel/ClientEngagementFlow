@@ -8,9 +8,11 @@
       </p>
     </div>
 
+    @if (!isSignedIn()) {
     <button class="button button-secondary" (click)="login()">
       Sign in
     </button>
+    }
   </header>
 
   <main>
@@ -26,7 +28,9 @@
                [value]="documentId()"
                (input)="documentId.set($any($event.target).value)" />
 
-        <button class="button button-primary" (click)="submitJob()">
+        <button class="button button-primary"
+                [disabled]="!documentId().trim()"
+                (click)="submitJob()">
           Submit job
         </button>
       </div>
@@ -51,7 +55,7 @@
               <th>Job ID</th>
               <th>Document ID</th>
               <th>Status</th>
-              <th>Created</th>
+              <th>Created (UTC)</th>
             </tr>
           </thead>
 
@@ -79,7 +83,7 @@
               </td>
 
               <td class="created">
-                {{ job.createdUtc }}
+                {{ job.createdUtc | date:'dd MMM yyyy, HH:mm':'UTC' }}
               </td>
             </tr>
             }

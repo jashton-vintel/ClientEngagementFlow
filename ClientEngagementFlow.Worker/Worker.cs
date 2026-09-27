@@ -157,11 +157,12 @@ namespace ClientEngagementFlow.Worker
             var client = _httpClientFactory.CreateClient();
 
             var apiKey = _configuration["InternalApi:NotificationApiKey"];
+            var baseUrl = _configuration["InternalApi:BaseUrl"];
 
             client.DefaultRequestHeaders.Add("X-Internal-Api-Key", apiKey);
 
             var response = await client.PostAsJsonAsync(
-                "https://localhost:7221/api/job-notifications",
+                $"{baseUrl}/api/job-notifications",
                 new
                 {
                     JobId = jobId,

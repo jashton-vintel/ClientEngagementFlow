@@ -23,16 +23,15 @@ import {
 } from '@azure/msal-angular';
 
 import { App } from './app/app';
-
-const apiScope = 'api://33043fba-9677-43cc-bd5b-c0173f5a1fef/jobs.submit';
+import { environment } from './environments/environment';
 
 
 export function MSALInstanceFactory(): IPublicClientApplication {
   return new PublicClientApplication({
     auth: {
-      clientId: 'fa5c8985-7029-48d5-908c-7dfdcef25542',
-      authority: 'https://login.microsoftonline.com/a205873a-af56-439f-a39d-e53d68e2fe4d',
-      redirectUri: 'http://localhost:49860'
+      clientId: environment.entra.clientId,
+      authority: `https://login.microsoftonline.com/${environment.entra.tenantId}`,
+      redirectUri: environment.entra.redirectUri
     },
     cache: {
       cacheLocation: BrowserCacheLocation.LocalStorage
@@ -46,8 +45,8 @@ export function MSALInterceptorConfigFactory(): MsalInterceptorConfiguration {
   const protectedResourceMap = new Map<string, Array<string>>();
 
   protectedResourceMap.set(
-    'https://localhost:7221/api/jobs',
-    [apiScope]
+    `${environment.apiBaseUrl}/api/jobs`,
+    [environment.apiScope]
   );
 
   return {

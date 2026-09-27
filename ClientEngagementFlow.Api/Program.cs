@@ -53,12 +53,14 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? throw new InvalidOperationException("Cors:AllowedOrigins was not found.");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularDev", policy =>
     {
         policy
-            .WithOrigins("http://127.0.0.1:49860", "http://localhost:49860")
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

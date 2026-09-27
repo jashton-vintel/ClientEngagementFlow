@@ -118,6 +118,11 @@ input {
     transform: translateY(1px);
   }
 
+  .button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
 .button-primary {
   background: #3448c5;
   color: white;
