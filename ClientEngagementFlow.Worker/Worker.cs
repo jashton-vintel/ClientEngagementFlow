@@ -1,6 +1,9 @@
 using Azure.Messaging.ServiceBus;
 using ClientEngagementFlow.Application.Abstractions.Messaging;
 using ClientEngagementFlow.Application.Abstractions.Persistence;
+using ClientEngagementFlow.Domain.Enums;
+using ClientEngagementFlow.Infrastructure.Messaging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace ClientEngagementFlow.Worker
@@ -9,24 +12,22 @@ namespace ClientEngagementFlow.Worker
     {
         private readonly ServiceBusClient _serviceBusClient;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<Worker> _logger;
+        private readonly ServiceBusOptions _serviceBusOptions;
 
         private ServiceBusProcessor? _processor;
 
-        public Worker(ServiceBusClient serviceBusClient, IServiceScopeFactory scopeFactory, IConfiguration configuration, ILogger<Worker> logger)
+        public Worker(ServiceBusClient serviceBusClient, IServiceScopeFactory scopeFactory, ILogger<Worker> logger, IOptions<ServiceBusOptions> options)
         {
             _serviceBusClient = serviceBusClient;
             _scopeFactory = scopeFactory;
-            _configuration = configuration;
             _logger = logger;
+            _serviceBusOptions = options.Value;
         }
 
         protected override async Task ExecuteAsync(CancellationToken ct)
         {
-            var queueName = _configuration["ServiceBus:QueueName"] ?? throw new InvalidOperationException("ServiceBus queue name is not configured.");
-
-            _processor = _serviceBusClient.CreateProcessor(queueName, new ServiceBusProcessorOptions
+            _processor = _serviceBusClient.CreateProcessor(_serviceBusOptions.QueueName, new ServiceBusProcessorOptions
             {
                 // Deliberate so we get explicit settlements i.e. at least once behaviour instead of deleting a message because it was recieved
                 AutoCompleteMessages = false 
@@ -42,49 +43,75 @@ namespace ClientEngagementFlow.Worker
 
         private async Task ProcessMessageAsync(ProcessMessageEventArgs args)
         {
+            _logger.LogInformation("Received message {MessageId}. DeliveryCount: {DeliveryCount}", args.Message.MessageId, args.Message.DeliveryCount);
+
+            ProcessingJobMessage? message;
 
             try
             {
+                message = JsonSerializer.Deserialize<ProcessingJobMessage>(args.Message.Body);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Invalid message {MessageId}", args.Message.MessageId);
 
-                _logger.LogInformation("Received message {MessageId}. DeliveryCount: {DeliveryCount}", args.Message.MessageId, args.Message.DeliveryCount);
+                await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body is not valid JSON.");
 
-                var message = JsonSerializer.Deserialize<ProcessingJobMessage>(args.Message.Body);
+                return;
+            }
 
-                if (message is null)
-                {
-                    await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body could not be deserialized.");
+            if (message is null)
+            {
+                await args.DeadLetterMessageAsync(args.Message, "InvalidMessage", "Message body could not be deserialized.");
+                return;
+            }
 
-                    return;
-                }
+            using var scope = _scopeFactory.CreateScope();
+            var store = scope.ServiceProvider.GetRequiredService<IProcessingJobStore>();
+            var job = await store.GetByIdAsync(message.JobId, args.CancellationToken);
 
-                // safely get a fresh scoped DbContext per message instead of keeping one alive for the whole worker lifetime
-                using var scope = _scopeFactory.CreateScope();
+            if (job is null)
+            {
+                await args.DeadLetterMessageAsync(args.Message, "JobNotFound", $"Processing job {message.JobId} was not found.");
+                return;
+            }
 
-                var store = scope.ServiceProvider.GetRequiredService<IProcessingJobStore>();
+            // Simple guard to stop potential duplication if sql save failes for now..
+            if (job.Status == ProcessingStatus.Completed)
+            {
+                _logger.LogInformation("Job {JobId} is already completed. Completing duplicate message.", job.Id);
+                await args.CompleteMessageAsync(args.Message, args.CancellationToken);
 
-                var job = await store.GetByIdAsync(message.JobId, args.CancellationToken);
+                return;
+            }
 
-                if (job is null)
-                {
-                    await args.DeadLetterMessageAsync(args.Message, "JobNotFound", $"Processing job {message.JobId} was not found.");
-
-                    return;
-                }
-
+            try
+            {
                 job.StartProcessing();
-
-                throw new InvalidOperationException("Test processing failure");
-
                 job.StartValidation();
+
                 job.Complete();
 
                 await store.UpdateAsync(job, args.CancellationToken);
 
                 await args.CompleteMessageAsync(args.Message, args.CancellationToken);
+
+                _logger.LogInformation("Completed processing job {JobId}", job.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Processing failed for message {MessageId}. DeliveryCount: {DeliveryCount}", args.Message.MessageId, args.Message.DeliveryCount);
+                _logger.LogError(ex, "Processing failed for job {JobId}. DeliveryCount: {DeliveryCount}", job.Id, args.Message.DeliveryCount);
+
+                // If we exceed the max delivery count mark the job as failed, save it and then move to DLQ
+                if (args.Message.DeliveryCount >= _serviceBusOptions.MaxDeliveryCount)
+                {
+                    job.Fail(ex.Message);
+
+                    await store.UpdateAsync(job, args.CancellationToken);
+                    await args.DeadLetterMessageAsync(args.Message, "ProcessingFailed", ex.Message, args.CancellationToken);
+
+                    return;
+                }
 
                 throw;
             }
