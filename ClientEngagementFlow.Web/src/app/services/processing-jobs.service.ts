@@ -15,4 +15,14 @@ export class ProcessingJobsService {
   getJobs(): Observable<ProcessingJob[]> {
     return this.http.get<ProcessingJob[]>(this.apiUrl);
   }
+
+  createJob(documentId: string): Observable<ProcessingJob> {
+    return this.http.post<ProcessingJob>(
+      'https://localhost:7221/api/jobs',
+      {
+        documentId
+      }
+    );
+  }
+
 }

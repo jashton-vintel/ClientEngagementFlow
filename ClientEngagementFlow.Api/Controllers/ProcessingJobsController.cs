@@ -22,7 +22,6 @@ namespace ClientEngagementFlow.Api.Controllers
             _publisher = publisher;
         }
 
-        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {

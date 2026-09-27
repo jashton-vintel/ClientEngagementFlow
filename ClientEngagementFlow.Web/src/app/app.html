@@ -23,3 +23,15 @@
 </table>
 
 <button (click)="login()">Sign in</button>
+
+
+<div>
+  <input type="text"
+         placeholder="Document ID"
+         [value]="documentId()"
+         (input)="documentId.set($any($event.target).value)" />
+
+  <button (click)="submitJob()">
+    Submit job
+  </button>
+</div>
