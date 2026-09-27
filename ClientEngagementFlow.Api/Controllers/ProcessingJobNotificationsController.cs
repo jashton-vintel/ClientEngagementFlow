@@ -10,15 +10,25 @@ namespace ClientEngagementFlow.Api.Controllers
     public class ProcessingJobNotificationsController : ControllerBase
     {
         private readonly IHubContext<ProcessingJobsHub> _hubContext;
+        private readonly IConfiguration _configuration;
 
-        public ProcessingJobNotificationsController(IHubContext<ProcessingJobsHub> hubContext)
+        public ProcessingJobNotificationsController(IHubContext<ProcessingJobsHub> hubContext, IConfiguration configuration)
         {
             _hubContext = hubContext;
+            _configuration = configuration;
         }
 
         [HttpPost]
         public async Task<IActionResult> NotifyStatusChanged(ProcessingJobStatusChangedRequest request, CancellationToken cancellationToken)
         {
+            var expectedApiKey = _configuration["InternalApi:NotificationApiKey"];
+            var suppliedApiKey = Request.Headers["X-Internal-Api-Key"].FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(expectedApiKey) || suppliedApiKey != expectedApiKey)
+            {
+                return Unauthorized();
+            }
+
             await _hubContext.Clients.All.SendAsync(
                 "JobStatusChanged",
                 request.JobId,

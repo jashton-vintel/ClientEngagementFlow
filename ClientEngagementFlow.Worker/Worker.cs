@@ -16,16 +16,19 @@ namespace ClientEngagementFlow.Worker
         private readonly ILogger<Worker> _logger;
         private readonly ServiceBusOptions _serviceBusOptions;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
         private ServiceBusProcessor? _processor;
 
-        public Worker(ServiceBusClient serviceBusClient, IServiceScopeFactory scopeFactory, ILogger<Worker> logger, IOptions<ServiceBusOptions> options, IHttpClientFactory httpClientFactory)
+        public Worker(ServiceBusClient serviceBusClient, IServiceScopeFactory scopeFactory, ILogger<Worker> logger, IOptions<ServiceBusOptions> options, 
+            IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _serviceBusClient = serviceBusClient;
             _scopeFactory = scopeFactory;
             _logger = logger;
             _serviceBusOptions = options.Value;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         protected override async Task ExecuteAsync(CancellationToken ct)
@@ -91,10 +94,22 @@ namespace ClientEngagementFlow.Worker
             try
             {
                 job.StartProcessing();
+
+                await store.UpdateAsync(job, args.CancellationToken);
+                await NotifyStatusChangedSafelyAsync(job.Id, job.Status.ToString(), args.CancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), args.CancellationToken);
+
                 job.StartValidation();
+
+                await store.UpdateAsync(job, args.CancellationToken);
+                await NotifyStatusChangedSafelyAsync(job.Id, job.Status.ToString(), args.CancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), args.CancellationToken);
+
                 job.Complete();
 
                 await store.UpdateAsync(job, args.CancellationToken);
+
+                await NotifyStatusChangedSafelyAsync(job.Id, job.Status.ToString(),args.CancellationToken);
             }
             catch (Exception ex)
             {
@@ -106,20 +121,12 @@ namespace ClientEngagementFlow.Worker
                     job.Fail(ex.Message);
 
                     await store.UpdateAsync(job, args.CancellationToken);
+                    await NotifyStatusChangedSafelyAsync(job.Id, job.Status.ToString(), args.CancellationToken);
                     await args.DeadLetterMessageAsync(args.Message, "ProcessingFailed", ex.Message, args.CancellationToken);
                     return;
                 }
 
                 throw;
-            }
-
-            try
-            {
-                await NotifyStatusChangedAsync(job.Id, job.Status.ToString(), args.CancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Job {JobId} completed successfully, but the real-time notification failed.", job.Id);
             }
 
             await args.CompleteMessageAsync(args.Message, args.CancellationToken);
@@ -149,6 +156,10 @@ namespace ClientEngagementFlow.Worker
         {
             var client = _httpClientFactory.CreateClient();
 
+            var apiKey = _configuration["InternalApi:NotificationApiKey"];
+
+            client.DefaultRequestHeaders.Add("X-Internal-Api-Key", apiKey);
+
             var response = await client.PostAsJsonAsync(
                 "https://localhost:7221/api/job-notifications",
                 new
@@ -159,6 +170,18 @@ namespace ClientEngagementFlow.Worker
                 cancellationToken);
 
             response.EnsureSuccessStatusCode();
+        }
+
+        private async Task NotifyStatusChangedSafelyAsync(Guid jobId, string status, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await NotifyStatusChangedAsync(jobId, status, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Job {JobId} changed to {Status}, but the real-time notification failed.", jobId, status);
+            }
         }
     }
 }

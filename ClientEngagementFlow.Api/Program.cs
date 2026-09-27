@@ -20,6 +20,33 @@ builder.Services
     .AddMicrosoftIdentityWebApi(
         builder.Configuration.GetSection("AzureAd"));
 
+builder.Services.Configure<JwtBearerOptions>(
+    JwtBearerDefaults.AuthenticationScheme,
+    options =>
+    {
+        var existingOnMessageReceived = options.Events.OnMessageReceived;
+
+        options.Events.OnMessageReceived = async context =>
+        {
+            if (existingOnMessageReceived is not null)
+            {
+                await existingOnMessageReceived(context);
+            }
+
+            if (string.IsNullOrEmpty(context.Token))
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/processing-jobs"))
+                {
+                    context.Token = accessToken;
+                }
+            }
+        };
+    });
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddOpenApi();
