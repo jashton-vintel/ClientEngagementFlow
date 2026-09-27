@@ -1,4 +1,5 @@
 ﻿using ClientEngagementFlow.Api.Contracts;
+using ClientEngagementFlow.Application.Abstractions.Messaging;
 using ClientEngagementFlow.Application.Abstractions.Persistence;
 using ClientEngagementFlow.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +14,12 @@ namespace ClientEngagementFlow.Api.Controllers
     public class ProcessingJobsController : ControllerBase
     {
         private readonly IProcessingJobStore _store;
+        private readonly IProcessingJobPublisher _publisher;
 
-        public ProcessingJobsController(IProcessingJobStore store)
+        public ProcessingJobsController(IProcessingJobStore store, IProcessingJobPublisher publisher)
         {
             _store = store;
+            _publisher = publisher;
         }
 
         [HttpGet]
@@ -49,7 +52,13 @@ namespace ClientEngagementFlow.Api.Controllers
 
             var job = new ProcessingJob(request.DocumentId);
 
+            // store to db
             await _store.AddAsync(job, cancellationToken);
+
+            // how to handle failure here?
+
+            // publish job
+            await _publisher.PublishAsync(job.Id, job.DocumentId,cancellationToken);
 
             var response = ConvertToDto(job);
 

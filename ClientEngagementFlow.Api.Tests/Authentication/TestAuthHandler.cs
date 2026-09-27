@@ -6,7 +6,7 @@ using System.Text.Encodings.Web;
 
 namespace ClientEngagementFlow.Api.Tests.Authentication
 {
-    public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         public const string SchemeName = "Test";
 
