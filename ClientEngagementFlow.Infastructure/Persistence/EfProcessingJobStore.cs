@@ -20,6 +20,11 @@ namespace ClientEngagementFlow.Infastructure.Persistence
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task UpdateAsync(ProcessingJob job, CancellationToken cancellationToken = default)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         public Task<ProcessingJob?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return _dbContext.ProcessingJobs.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);

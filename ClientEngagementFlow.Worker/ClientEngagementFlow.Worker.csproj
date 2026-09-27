@@ -8,10 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.21.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ClientEngagementFlow.Domain\ClientEngagementFlow.Domain.csproj" />
+    <ProjectReference Include="..\ClientEngagementFlow.Application\ClientEngagementFlow.Application.csproj" />
+    <ProjectReference Include="..\ClientEngagementFlow.Infastructure\ClientEngagementFlow.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
